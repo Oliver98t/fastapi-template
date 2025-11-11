@@ -12,4 +12,4 @@ app.include_router(users.router, prefix="/users", tags=["users"])
 
 @app.get("/")
 def read_root():
-    return {"Server Status": "Up"}
+    return {"Server Status": "Running"}
