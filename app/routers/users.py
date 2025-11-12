@@ -8,10 +8,12 @@ from database.crud import user_crud
 User_crud = user_crud()
 router = APIRouter()
 
+
 @router.get("/", response_model=List[User])
 def get_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     users = User_crud.get_all(db, skip=skip, limit=limit)
     return users
+
 
 @router.get("/{user_id}", response_model=User)
 def get_user(user_id: int, db: Session = Depends(get_db)):
@@ -19,6 +21,7 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")
     return db_user
+
 
 @router.post("/", response_model=User)
 def create_user(user: User, db: Session = Depends(get_db)):
@@ -28,6 +31,7 @@ def create_user(user: User, db: Session = Depends(get_db)):
     else:
         new_user = User_crud.create(db=db, obj=user)
         return new_user
+
 
 @router.delete("/{user_id}", response_model=User)
 def delete_user(user_id: int, db: Session = Depends(get_db)):

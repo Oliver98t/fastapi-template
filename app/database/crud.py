@@ -1,20 +1,17 @@
 from sqlmodel import Session, select
 from .schemas import User, Item
 
-class base_crud():
+class base_crud:
     def __init__(self, table):
         self.table = table
 
-    # User CRUD operations
     def get(self, db: Session, id: int):
         return db.get(self.table, id)
-
 
     def get_all(self, db: Session, skip: int = 0, limit: int = 100):
         statement = select(self.table).offset(skip).limit(limit)
         results = db.exec(statement)
         return results.all()
-
 
     def create(self, db: Session, obj):
         db_obj = self.table(**obj.dict())
@@ -22,7 +19,6 @@ class base_crud():
         db.commit()
         db.refresh(db_obj)
         return db_obj
-
 
     def delete(self, db: Session, id: int):
         db_obj = db.get(self.table, id)
