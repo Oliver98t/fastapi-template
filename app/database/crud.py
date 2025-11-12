@@ -1,14 +1,9 @@
 from sqlmodel import Session, select
 from .schemas import User, Item
-from models.user import UserCreate
-from models.item import ItemCreate
 
-# TODO add delete to base crud
-# base CRUD class
 class base_crud():
-    def __init__(self, table, model):
+    def __init__(self, table):
         self.table = table
-        self.model = model
 
     # User CRUD operations
     def get(self, db: Session, id: int):
@@ -38,7 +33,7 @@ class base_crud():
 
 class user_crud(base_crud):
     def __init__(self):
-        super().__init__(User, UserCreate)
+        super().__init__(User)
 
     def get_email(self, db: Session, email: str):
         statement = select(self.table).where(self.table.email == email)
@@ -47,4 +42,4 @@ class user_crud(base_crud):
 
 class item_crud(base_crud):
     def __init__(self):
-        super().__init__(Item, ItemCreate)
+        super().__init__(Item)
