@@ -1,6 +1,5 @@
-
-from sqlmodel import Session
-from .schemas import DBUser, DBItem
+from sqlmodel import Session, select
+from .schemas import User, Item
 from models.user import UserCreate
 from models.item import ItemCreate
 
@@ -12,13 +11,12 @@ class base_crud():
         self.model = model
 
     # User CRUD operations
-
     def get(self, db: Session, id: int):
         return db.get(self.table, id)
 
 
     def get_all(self, db: Session, skip: int = 0, limit: int = 100):
-        statement = self.table.select().offset(skip).limit(limit)
+        statement = select(self.table).offset(skip).limit(limit)
         results = db.exec(statement)
         return results.all()
 
@@ -40,14 +38,13 @@ class base_crud():
 
 class user_crud(base_crud):
     def __init__(self):
-        super().__init__(DBUser, UserCreate)
-
+        super().__init__(User, UserCreate)
 
     def get_email(self, db: Session, email: str):
-        statement = self.table.select().where(self.table.email == email)
+        statement = select(self.table).where(self.table.email == email)
         result = db.exec(statement).first()
         return result
 
 class item_crud(base_crud):
     def __init__(self):
-        super().__init__(DBItem, ItemCreate)
+        super().__init__(Item, ItemCreate)

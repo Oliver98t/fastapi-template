@@ -1,9 +1,6 @@
 from fastapi import FastAPI
 from routers import items, users
-from database import engine, Base
-
-# Create database tables
-Base.metadata.create_all(bind=engine)
+from database import engine
 
 app = FastAPI(title="Simple FastAPI Project", version="1.0.0")
 

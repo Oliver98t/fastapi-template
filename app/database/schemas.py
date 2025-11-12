@@ -1,11 +1,10 @@
-
 from sqlmodel import SQLModel, Field
 from typing import Optional
 from datetime import datetime
 
 
 
-class DBUser(SQLModel, table=True):
+class User(SQLModel, table=True):
     __tablename__ = "users"
     id: Optional[int] = Field(default=None, primary_key=True, index=True)
     name: str = Field(index=True)
@@ -15,7 +14,7 @@ class DBUser(SQLModel, table=True):
 
 
 
-class DBItem(SQLModel, table=True):
+class Item(SQLModel, table=True):
     __tablename__ = "items"
     id: Optional[int] = Field(default=None, primary_key=True, index=True)
     name: str = Field(index=True)

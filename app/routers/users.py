@@ -1,10 +1,8 @@
 from fastapi import APIRouter, HTTPException, Depends
-
 from sqlmodel import Session
 from typing import List
-from models.user import User, UserCreate
 from database import get_db
-from database import crud
+from database.schemas import User
 from database.crud import user_crud
 
 User_crud = user_crud()
@@ -23,7 +21,7 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
     return db_user
 
 @router.post("/", response_model=User)
-def create_user(user: UserCreate, db: Session = Depends(get_db)):
+def create_user(user: User, db: Session = Depends(get_db)):
     email_user = User_crud.get_email(db=db, email=user.email)
     if email_user:
         raise HTTPException(status_code=404, detail="User exists")

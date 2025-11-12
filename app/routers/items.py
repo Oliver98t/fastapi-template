@@ -1,10 +1,8 @@
 from fastapi import APIRouter, HTTPException, Depends
-
 from sqlmodel import Session
 from typing import List
-from models.item import Item, ItemCreate
 from database import get_db
-from database import crud
+from database.schemas import Item
 from database.crud import item_crud
 
 Item_crud = item_crud()
@@ -23,7 +21,7 @@ def get_item(item_id: int, db: Session = Depends(get_db)):
     return db_item
 
 @router.post("/", response_model=Item)
-def create_item(item: ItemCreate, db: Session = Depends(get_db)):
+def create_item(item: Item, db: Session = Depends(get_db)):
     return Item_crud.create(db=db, obj=item)
 
 @router.delete("/{item_id}", response_model=Item)
