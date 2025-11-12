@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:3.11
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -7,11 +7,20 @@ ENV PYTHONUNBUFFERED=1
 # Set work directory
 WORKDIR /app
 
-# Install system dependencies
+# Copy custom CA certificate
+COPY ZscalerRootCertificate-2048-SHA256.crt /usr/local/share/ca-certificates/ZscalerRootCertificate-2048-SHA256.crt
+
+# Install system dependencies and update CA certificates
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         build-essential \
+        ca-certificates \
+    && update-ca-certificates \
     && rm -rf /var/lib/apt/lists/*
+
+# Set Python to use system CA certificates
+ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
 
 # Copy requirements first for better caching
 COPY requirements.txt .
