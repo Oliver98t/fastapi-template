@@ -1,24 +1,38 @@
-from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime
-from sqlalchemy.sql import func
-from .connection import Base
+'''
+Schemas for defining base/input models
+'''
+from sqlmodel import SQLModel, Field
+from typing import Optional
+from datetime import datetime
 
-
-class DBUser(Base):
+# User
+#################################################
+class User(SQLModel, table=True):
     __tablename__ = "users"
+    id: Optional[int] = Field(default=None, primary_key=True, index=True)
+    name: str = Field(index=True)
+    email: str = Field(index=True, unique=True)
+    created_at: datetime = Field(default_factory=datetime.now)
+    updated_at: Optional[datetime] = None
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, index=True)
-    email = Column(String, unique=True, index=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+class UserInput(SQLModel):
+    name: str
+    email: str
+#################################################
 
-
-class DBItem(Base):
+# Item
+#################################################
+class Item(SQLModel, table=True):
     __tablename__ = "items"
+    id: Optional[int] = Field(default=None, primary_key=True, index=True)
+    name: str = Field(index=True)
+    price: float
+    is_active: bool = True
+    created_at: datetime = Field(default_factory=datetime.now)
+    updated_at: Optional[datetime] = None
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, index=True)
-    price = Column(Float)
-    is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+class ItemInput(SQLModel):
+    name: str = Field(index=True)
+    price: float
+    is_active: bool
+#################################################

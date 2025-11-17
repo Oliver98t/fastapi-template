@@ -19,7 +19,6 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Set Python to use system CA certificates
-ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
 ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
 
 # Copy requirements first for better caching
