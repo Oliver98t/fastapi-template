@@ -26,7 +26,7 @@ A production-ready FastAPI template with database migrations, SQLAlchemy ORM, an
 
 1. Clone this repository:
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/Oliver98t/fastapi-template.git
 cd fastapi
 ```
 
@@ -57,25 +57,25 @@ uvicorn app.main:app --reload
 
 1. Clone this repository:
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/Oliver98t/fastapi-template.git
 cd fastapi
 ```
 
 2. Build and start the services:
 ```bash
-docker-compose up --build
+docker compose up --build
 ```
 
 3. Run database migrations (in a separate terminal):
 ```bash
-docker-compose exec app alembic upgrade head
+docker compose exec app alembic upgrade head
 ```
 
 The API will be available at `http://localhost:8000`
 
 To stop the services:
 ```bash
-docker-compose down
+docker compose down
 ```
 
 ## Database Migrations
@@ -88,8 +88,8 @@ This template uses Alembic for database migrations:
 
 For Docker Compose, prefix commands with `docker-compose exec app`:
 ```bash
-docker-compose exec app alembic revision --autogenerate -m "Description"
-docker-compose exec app alembic upgrade head
+docker compose exec app alembic revision --autogenerate -m "Description"
+docker compose exec app alembic upgrade head
 ```
 
 ## API Documentation
