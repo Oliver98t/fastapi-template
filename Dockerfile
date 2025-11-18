@@ -15,6 +15,9 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         build-essential \
         ca-certificates \
+        libffi-dev \
+        libssl-dev \
+        python3-dev \
     && update-ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
