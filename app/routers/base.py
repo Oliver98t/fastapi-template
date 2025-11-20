@@ -87,7 +87,7 @@ class UserRouter(BaseRouter):
             raise HTTPException(status_code=400, detail="Incorrect username or password")
         encode_data =   {
                             "sub": user.username,
-                            "priv": user.priviliges
+                            "priv": user.privilige
 
                         }
         access_token = create_access_token(data=encode_data)
