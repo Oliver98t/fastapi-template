@@ -42,3 +42,5 @@ websockets==15.0.1
 sqlmodel==0.0.16
 psycopg2-binary==2.9.9
 alembic==1.13.1
+python-jose[cryptography]
+passlib[bcrypt]

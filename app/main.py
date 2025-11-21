@@ -1,5 +1,6 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from routers.base import item_routes, user_routes
+from auth.encrypt import get_admin_rights, get_read_write_rights
 
 app = FastAPI(title="FastAPI Template Project", version="1.0.0")
 
@@ -9,3 +10,7 @@ app.include_router(user_routes.router, prefix="/users", tags=["users"])
 @app.get("/")
 def read_root():
     return {"Server Status": "Running"}
+
+@app.get("/protected", dependencies=[Depends(get_read_write_rights)])
+def protected_route():
+    return {"message": f"Authenticated!"}
