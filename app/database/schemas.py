@@ -13,7 +13,7 @@ class UserPrivilege(IntEnum):
     ADMIN=0
     READ_WRITE=1
     READ_ONLY=2
-
+# TODO correct typo privilige -> privilege
 class User(SQLModel, table=True):
     __tablename__ = "users"
     id: Optional[int] = Field(default=None, primary_key=True, index=True)
