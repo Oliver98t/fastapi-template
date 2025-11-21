@@ -8,6 +8,7 @@ class base_crud:
         self.table = table
 
     def get(self, id: int, db: Session = Depends(get_db)):
+        print(id)
         return db.get(self.table, id)
 
     def get_all(self, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):

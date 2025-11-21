@@ -29,7 +29,7 @@ class BaseRouter:
         return items
 
     def _get(self, item_id: int, db: Session = Depends(get_db)):
-        db_item = self.orm.get(db, id=item_id)
+        db_item = self.orm.get(db=db, id=item_id)
         if db_item is None:
             raise HTTPException(status_code=404, detail="Item not found")
         return db_item
@@ -42,7 +42,7 @@ class BaseRouter:
         return create
 
     def _delete(self, item_id: int, db: Session = Depends(get_db)):
-        db_item = self.orm.delete(db, id=item_id)
+        db_item = self.orm.delete(db=db, id=item_id)
         if db_item is None:
             raise HTTPException(status_code=404, detail="Item not found")
         return db_item
