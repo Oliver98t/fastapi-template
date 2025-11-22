@@ -14,15 +14,15 @@ class BaseRouter:
         self.input_model = input_model
         self.router = APIRouter()
     # create default routes for basic crud functions
-    def init_routes(self, get_privilige):
+    def init_routes(self, get_privilege):
         singular_item = self.model.__tablename__[:-1]
         singular_item_slug = "/{"+ singular_item +"}"
-        self.router.get("/", response_model=List[self.model], dependencies=[Depends(get_privilige)])(self._get_all)
-        self.router.get(singular_item_slug, response_model=self.model, dependencies=[Depends(get_privilige)])(self._get)
-        self.router.delete(singular_item_slug, response_model=self.model, dependencies=[Depends(get_privilige)])(self._delete)
+        self.router.get("/", response_model=List[self.model], dependencies=[Depends(get_privilege)])(self._get_all)
+        self.router.get(singular_item_slug, response_model=self.model, dependencies=[Depends(get_privilege)])(self._get)
+        self.router.delete(singular_item_slug, response_model=self.model, dependencies=[Depends(get_privilege)])(self._delete)
         # generate create route as input type cannot be determined at runtime
         self.create = self._make_create_func(input_model=self.input_model, crud=self.orm)
-        self.router.post("/", response_model=self.model, dependencies=[Depends(get_privilige)])(self.create)
+        self.router.post("/", response_model=self.model, dependencies=[Depends(get_privilege)])(self.create)
 
     def _get_all(self, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
         items = self.orm.get_all(db=db, skip=skip, limit=limit)
@@ -52,7 +52,7 @@ class ItemRouter(BaseRouter):
         super().__init__(   orm=item_orm,
                             model=schemas.Item,
                             input_model=schemas.ItemInput)
-        self.init_routes(get_privilige=get_read_write_rights)
+        self.init_routes(get_privilege=get_read_write_rights)
 
 class UserRouter(BaseRouter):
     def __init__(self):
@@ -60,8 +60,8 @@ class UserRouter(BaseRouter):
                             model=schemas.User,
                             input_model=schemas.UserInput)
 
-        self.init_routes(get_privilige=get_admin_rights)
-        # example to add extra routes and set priviliges
+        self.init_routes(get_privilege=get_admin_rights)
+        # example to add extra routes and set privileges
         self.router.post("/", response_model=self.model, dependencies=[Depends(get_admin_rights)])(self._create_user)
         self.router.post("/token")(self._login)
 
@@ -87,7 +87,7 @@ class UserRouter(BaseRouter):
             raise HTTPException(status_code=400, detail="Incorrect username or password")
         encode_data =   {
                             "sub": user.username,
-                            "priv": user.privilige
+                            "priv": user.privilege
 
                         }
         access_token = create_access_token(data=encode_data)

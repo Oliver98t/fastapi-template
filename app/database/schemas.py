@@ -13,13 +13,14 @@ class UserPrivilege(IntEnum):
     ADMIN=0
     READ_WRITE=1
     READ_ONLY=2
-# TODO correct typo privilige -> privilege
+
+
 class User(SQLModel, table=True):
     __tablename__ = "users"
     id: Optional[int] = Field(default=None, primary_key=True, index=True)
     username: str = Field(index=True, unique=True)
     email: str = Field(index=True, unique=True)
-    privilige: int = Field(ge=0, le=2) # TODO add number guard 0<=x<=2
+    privilege: int = Field(ge=0, le=2) # TODO add number guard 0<=x<=2
     hashed_password: str
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: Optional[datetime] = None
@@ -27,8 +28,8 @@ class User(SQLModel, table=True):
 class UserInput(SQLModel):
     username: str
     email: str
-    privilige: int
-    hashed_password: str
+    privilege: int
+    password: str
 #################################################
 
 # Item

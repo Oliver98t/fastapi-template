@@ -7,7 +7,7 @@ from getpass import getpass
 while True:
     username = input("enter username: ")
     email = input("enter email: ")
-    privilige = input("enter privilige: ")
+    privilege = input("enter privilege: ")
     password = getpass("enter password: ")
     create_check = input("Create user (y/n): ")
 
@@ -15,7 +15,7 @@ while True:
         hashed_password = get_password_hash(password)
         user_input = UserInput( username=username,
                                 email=email,
-                                privilige=privilige,
+                                privilege=privilege,
                                 hashed_password=hashed_password)
 
         # Create a database session and use it with the ORM

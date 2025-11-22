@@ -41,22 +41,22 @@ def decode_access_token(token: str):
 def get_current_user(token: str = Depends(oauth2_scheme)):
     payload = decode_access_token(token)
     username: str = payload.get("sub")
-    privilige: int = payload.get("priv")
+    privilege: int = payload.get("priv")
     if username is None:
         raise HTTPException(status_code=401, detail="Invalid authentication credentials")
-    return privilige
+    return privilege
 
-def get_admin_rights(privilige: int = Depends(get_current_user)):
-    if privilige > UserPrivilege.ADMIN.value:
+def get_admin_rights(privilege: int = Depends(get_current_user)):
+    if privilege > UserPrivilege.ADMIN.value:
         raise HTTPException(status_code=401, detail="Invalid authentication credentials")
     return
 
-def get_read_write_rights(privilige: int = Depends(get_current_user)):
-    if privilige > UserPrivilege.READ_WRITE.value:
+def get_read_write_rights(privilege: int = Depends(get_current_user)):
+    if privilege > UserPrivilege.READ_WRITE.value:
         raise HTTPException(status_code=401, detail="Invalid authentication credentials")
     return
 
-def get_read_rights(privilige: int = Depends(get_current_user)):
-    if privilige > UserPrivilege.READ_ONLY.value:
+def get_read_rights(privilege: int = Depends(get_current_user)):
+    if privilege > UserPrivilege.READ_ONLY.value:
         raise HTTPException(status_code=401, detail="Invalid authentication credentials")
     return
