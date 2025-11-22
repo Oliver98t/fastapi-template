@@ -14,7 +14,6 @@ class UserPrivilege(IntEnum):
     READ_WRITE=1
     READ_ONLY=2
 
-
 class User(SQLModel, table=True):
     __tablename__ = "users"
     id: Optional[int] = Field(default=None, primary_key=True, index=True)
@@ -30,6 +29,12 @@ class UserInput(SQLModel):
     email: str
     privilege: int
     password: str
+
+class UserInputHashed(SQLModel):
+    username: str
+    email: str
+    privilege: int
+    hashed_password: str
 #################################################
 
 # Item

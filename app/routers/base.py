@@ -3,6 +3,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session
 from typing import List
 from database.connection import get_db
+from auth.encrypt import get_password_hash
 import database.schemas as schemas
 from database.orm import item_orm, user_orm
 from auth.encrypt import verify_password, create_access_token, get_admin_rights, get_read_write_rights
@@ -14,15 +15,16 @@ class BaseRouter:
         self.input_model = input_model
         self.router = APIRouter()
     # create default routes for basic crud functions
-    def init_routes(self, get_privilege):
+    def init_routes(self, get_privilege, override_create=False):
         singular_item = self.model.__tablename__[:-1]
         singular_item_slug = "/{"+ singular_item +"}"
         self.router.get("/", response_model=List[self.model], dependencies=[Depends(get_privilege)])(self._get_all)
         self.router.get(singular_item_slug, response_model=self.model, dependencies=[Depends(get_privilege)])(self._get)
         self.router.delete(singular_item_slug, response_model=self.model, dependencies=[Depends(get_privilege)])(self._delete)
         # generate create route as input type cannot be determined at runtime
-        self.create = self._make_create_func(input_model=self.input_model, crud=self.orm)
-        self.router.post("/", response_model=self.model, dependencies=[Depends(get_privilege)])(self.create)
+        if override_create == False:
+            self.create = self._make_create_func(input_model=self.input_model, crud=self.orm)
+            self.router.post("/", response_model=self.model, dependencies=[Depends(get_privilege)])(self.create)
 
     def _get_all(self, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
         items = self.orm.get_all(db=db, skip=skip, limit=limit)
@@ -36,6 +38,7 @@ class BaseRouter:
 
     def _make_create_func(self, input_model, crud):
         def create(item, db: Session = Depends(get_db)):
+            print("this here")
             return crud.create(db=db, obj=item)
         # Set the correct annotation for FastAPI to use as input model
         create.__annotations__ = {'item': input_model, 'db': Session}
@@ -60,7 +63,7 @@ class UserRouter(BaseRouter):
                             model=schemas.User,
                             input_model=schemas.UserInput)
 
-        self.init_routes(get_privilege=get_admin_rights)
+        self.init_routes(get_privilege=get_admin_rights, override_create=True)
         # example to add extra routes and set privileges
         self.router.post("/", response_model=self.model, dependencies=[Depends(get_admin_rights)])(self._create_user)
         self.router.post("/token")(self._login)
@@ -73,10 +76,16 @@ class UserRouter(BaseRouter):
         if email_user:
             raise HTTPException(status_code=404, detail="User exists")
         else:
-            new_user = self.orm.create(db=db, obj=user)
+            updated_user = schemas.UserInputHashed(
+            username=user.username,
+            email=user.email,
+            privilege=user.privilege,
+            hashed_password=get_password_hash(user.password)  # Example update
+        )
+            new_user = self.orm.create(db=db, obj=updated_user)
             return new_user
 
-    # create token for a user
+    # create new token for a user
     def _login(
         self,
         form_data: OAuth2PasswordRequestForm = Depends(),
