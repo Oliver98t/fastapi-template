@@ -4,7 +4,7 @@ from jose import JWTError, jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
-from database.schemas import UserPrivilege
+from database.base_schemas import UserPrivilege
 
 # Secret key and algorithm for JWT
 SECRET_KEY = "your-secret-key"

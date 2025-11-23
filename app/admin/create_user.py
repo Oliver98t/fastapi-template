@@ -1,6 +1,6 @@
 from auth.encrypt import get_password_hash
-from database.schemas import UserInput
-from database.orm import user_orm
+from database.base_schemas import UserInput
+from database.base_orm import user_orm
 from database.connection import get_db
 from getpass import getpass
 

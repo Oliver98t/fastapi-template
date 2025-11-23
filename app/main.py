@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Depends
-from routers.base import item_routes, user_routes
+from routers.base_routers import user_routes
+from routers.routers import item_routes
 from auth.encrypt import get_admin_rights, get_read_write_rights
 
 app = FastAPI(title="FastAPI Template Project", version="1.0.0")

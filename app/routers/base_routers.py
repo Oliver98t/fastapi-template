@@ -4,8 +4,8 @@ from sqlmodel import Session
 from typing import List
 from database.connection import get_db
 from auth.encrypt import get_password_hash
-import database.schemas as schemas
-from database.orm import item_orm, user_orm
+import database.base_schemas as base_schemas
+from database.base_orm import user_orm
 from auth.encrypt import verify_password, create_access_token, get_admin_rights, get_read_write_rights
 
 class BaseRouter:
@@ -50,18 +50,11 @@ class BaseRouter:
             raise HTTPException(status_code=404, detail="Item not found")
         return db_item
 
-class ItemRouter(BaseRouter):
-    def __init__(self):
-        super().__init__(   orm=item_orm,
-                            model=schemas.Item,
-                            input_model=schemas.ItemInput)
-        self.init_routes(get_privilege=get_read_write_rights)
-
 class UserRouter(BaseRouter):
     def __init__(self):
         super().__init__(   orm=user_orm,
-                            model=schemas.User,
-                            input_model=schemas.UserInput)
+                            model=base_schemas.User,
+                            input_model=base_schemas.UserInput)
 
         self.init_routes(get_privilege=get_admin_rights, override_create=True)
         # example to add extra routes and set privileges
@@ -69,14 +62,14 @@ class UserRouter(BaseRouter):
         self.router.post("/token")(self._login)
 
     def _create_user(   self,
-                        user: schemas.UserInput,
+                        user: base_schemas.UserInput,
                         db: Session = Depends(get_db)):
 
         email_user = self.orm.get_email(db=db, email=user.email)
         if email_user:
             raise HTTPException(status_code=404, detail="User exists")
         else:
-            updated_user = schemas.UserInputHashed(
+            updated_user = base_schemas.UserInputHashed(
             username=user.username,
             email=user.email,
             privilege=user.privilege,
@@ -102,5 +95,4 @@ class UserRouter(BaseRouter):
         access_token = create_access_token(data=encode_data)
         return {"access_token": access_token, "token_type": "bearer"}
 
-item_routes = ItemRouter()
 user_routes = UserRouter()
