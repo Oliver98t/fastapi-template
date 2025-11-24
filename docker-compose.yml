@@ -3,14 +3,16 @@ services:
     image: postgres:16
     container_name: fastapi_example_db
     restart: always
+    env_file:
+      - example.env
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     environment:
-      - POSTGRES_USER=oli98
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=postgres
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
     ports:
-      - "5432:5432"
+      - "${DB_PORT}:5432"
     networks:
       - fastapi_example_network
   fastapi_example_backend:
@@ -19,15 +21,17 @@ services:
     restart: always
     stdin_open: true
     tty: true
-    ports: 
-      - "8000:8000"  # Remove external port exposure
+    env_file:
+      - example.env
+    ports:
+      - "${API_PORT}:8000"
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=${NODE_ENV}
       - DB_HOST=db
       - DB_PORT=5432
-      - DB_USER=oli98
-      - DB_PASSWORD=password
-      - DB_NAME=postgres
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
     depends_on:
       - db
     volumes:
