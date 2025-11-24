@@ -18,7 +18,8 @@ if config.config_file_name is not None:
 # add your model's MetaData object here
 # for 'autogenerate' support
 from sqlmodel import SQLModel
-from database.base_schemas import User, Item
+from database.base_schemas import User
+from database.schemas import Item
 
 target_metadata = SQLModel.metadata
 

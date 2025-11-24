@@ -1,5 +1,5 @@
 from auth.encrypt import get_password_hash
-from database.base_schemas import UserInput
+from database.base_schemas import UserInputHashed
 from database.base_orm import user_orm
 from database.connection import get_db
 from getpass import getpass
@@ -13,10 +13,10 @@ while True:
 
     if create_check == 'y':
         hashed_password = get_password_hash(password)
-        user_input = UserInput( username=username,
-                                email=email,
-                                privilege=privilege,
-                                hashed_password=hashed_password)
+        user_input = UserInputHashed(   username=username,
+                                        email=email,
+                                        privilege=privilege,
+                                        hashed_password=hashed_password)
 
         # Create a database session and use it with the ORM
         db = next(get_db())
