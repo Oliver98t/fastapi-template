@@ -4,7 +4,7 @@ services:
     container_name: fastapi_example_db
     restart: always
     env_file:
-      - example.env
+      - .env
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     environment:
@@ -22,7 +22,7 @@ services:
     stdin_open: true
     tty: true
     env_file:
-      - example.env
+      - .env
     ports:
       - "${API_PORT}:8000"
     environment:

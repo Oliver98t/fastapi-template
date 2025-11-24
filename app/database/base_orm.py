@@ -17,6 +17,20 @@ class base_crud:
         results = db.exec(statement)
         return results.all()
 
+    def update(self, id: int, obj, db: Session = Depends(get_db)):
+        db_obj = db.get(self.table, id)
+        if not db_obj:
+            return None
+
+        obj_data = obj.dict(exclude_unset=True)
+        for field, value in obj_data.items():
+            setattr(db_obj, field, value)
+
+        db.add(db_obj)
+        db.commit()
+        db.refresh(db_obj)
+        return db_obj
+
     def create(self, obj, db: Session = Depends(get_db)):
         db_obj = self.table(**obj.dict())
         db.add(db_obj)
