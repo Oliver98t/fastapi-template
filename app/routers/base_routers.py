@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends
+from fastapi.routing import APIRoute
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session
 from typing import List
@@ -14,16 +15,19 @@ class BaseRouter:
         self.model = model
         self.input_model = input_model
         self.router = APIRouter()
-    # create default routes for basic crud functions
+    # create default routes for basic orm functions
     def init_routes(self, get_privilege, override_create=False):
         singular_item = self.model.__tablename__[:-1]
-        singular_item_slug = "/{"+ singular_item +"}"
+        self.singular_item_slug = "/{"+ singular_item +"_id}"
         self.router.get("/", response_model=List[self.model], dependencies=[Depends(get_privilege)])(self._get_all)
-        self.router.get(singular_item_slug, response_model=self.model, dependencies=[Depends(get_privilege)])(self._get)
-        self.router.delete(singular_item_slug, response_model=self.model, dependencies=[Depends(get_privilege)])(self._delete)
+        self.router.get(self.singular_item_slug, response_model=self.model, dependencies=[Depends(get_privilege)])(self._get)
+        self.router.delete(self.singular_item_slug, response_model=self.model, dependencies=[Depends(get_privilege)])(self._delete)
+        # generate update route as input type cannot be determined at runtime
+        self.update = self._make_update_func(input_model=self.input_model, orm=self.orm)
+        self.router.put(self.singular_item_slug, response_model=self.model, dependencies=[Depends(get_privilege)])(self.update)
         # generate create route as input type cannot be determined at runtime
         if override_create == False:
-            self.create = self._make_create_func(input_model=self.input_model, crud=self.orm)
+            self.create = self._make_create_func(input_model=self.input_model, orm=self.orm)
             self.router.post("/", response_model=self.model, dependencies=[Depends(get_privilege)])(self.create)
 
     def _get_all(self, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
@@ -36,13 +40,20 @@ class BaseRouter:
             raise HTTPException(status_code=404, detail="Item not found")
         return db_item
 
-    def _make_create_func(self, input_model, crud):
+    def _make_create_func(self, input_model, orm):
         def create(item, db: Session = Depends(get_db)):
             print("this here")
-            return crud.create(db=db, obj=item)
+            return orm.create(db=db, obj=item)
         # Set the correct annotation for FastAPI to use as input model
         create.__annotations__ = {'item': input_model, 'db': Session}
         return create
+
+    def _make_update_func(self, input_model, orm):
+        def update(item_id: int, item, db: Session = Depends(get_db)):
+            return orm.update(db=db, id=item_id, obj=item)
+        # Set the correct annotation for FastAPI to use as input model
+        update.__annotations__ = {'item_id': int, 'item': input_model, 'db': Session}
+        return update
 
     def _delete(self, item_id: int, db: Session = Depends(get_db)):
         db_item = self.orm.delete(db=db, id=item_id)
@@ -50,16 +61,36 @@ class BaseRouter:
             raise HTTPException(status_code=404, detail="Item not found")
         return db_item
 
+    # TODO remove old routes
+    def add_new_route(self, path: str, method: str, endpoint, dependencies=None):
+        for route in self.router.routes:
+            print(route)
+            print("\n")
+        new_route = APIRoute(
+            path=path,
+            endpoint=endpoint,
+            methods=[method],
+            response_model=self.model,
+            dependencies=dependencies
+        )
+        self.router.routes.append(new_route)
+
 class UserRouter(BaseRouter):
     def __init__(self):
         super().__init__(   orm=user_orm,
                             model=base_schemas.User,
                             input_model=base_schemas.UserInput)
 
-        self.init_routes(get_privilege=get_admin_rights, override_create=True)
-        # example to add extra routes and set privileges
-        self.router.post("/", response_model=self.model, dependencies=[Depends(get_admin_rights)])(self._create_user)
-        self.router.post("/token")(self._login)
+        self.init_routes(get_privilege=get_admin_rights)
+        
+        
+        # Create routes using APIRoute instead of decorators
+        self.add_new_route(path='/', method='POST', endpoint=self._create_user)
+        self.add_new_route(path='/token', method='PUT', endpoint=self._login)
+        
+        for route in self.router.routes:
+            print(route)
+            print("\n")
 
     def _create_user(   self,
                         user: base_schemas.UserInput,
@@ -77,7 +108,7 @@ class UserRouter(BaseRouter):
         )
             new_user = self.orm.create(db=db, obj=updated_user)
             return new_user
-
+    
     # create new token for a user
     def _login(
         self,
