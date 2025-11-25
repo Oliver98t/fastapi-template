@@ -7,7 +7,7 @@ from database.connection import get_db
 from auth.encrypt import get_password_hash
 import database.base_schemas as base_schemas
 from database.base_orm import user_orm
-from auth.encrypt import verify_password, create_access_token, get_admin_rights, get_read_write_rights
+from auth.encrypt import verify_password, create_access_token, get_admin_rights
 
 class BaseRouter:
     def __init__(self, orm, model, input_model):
@@ -16,7 +16,7 @@ class BaseRouter:
         self.input_model = input_model
         self.router = APIRouter()
     # create default routes for basic orm functions
-    def init_routes(self, get_privilege, override_create=False):
+    def init_routes(self, get_privilege):
         singular_item = self.model.__tablename__[:-1]
         self.singular_item_slug = "/{"+ singular_item +"_id}"
         self.router.get("/", response_model=List[self.model], dependencies=[Depends(get_privilege)])(self._get_all)
@@ -26,9 +26,8 @@ class BaseRouter:
         self.update = self._make_update_func(input_model=self.input_model, orm=self.orm)
         self.router.put(self.singular_item_slug, response_model=self.model, dependencies=[Depends(get_privilege)])(self.update)
         # generate create route as input type cannot be determined at runtime
-        if override_create == False:
-            self.create = self._make_create_func(input_model=self.input_model, orm=self.orm)
-            self.router.post("/", response_model=self.model, dependencies=[Depends(get_privilege)])(self.create)
+        self.create = self._make_create_func(input_model=self.input_model, orm=self.orm)
+        self.router.post("/", response_model=self.model, dependencies=[Depends(get_privilege)])(self.create)
 
     def _get_all(self, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
         items = self.orm.get_all(db=db, skip=skip, limit=limit)
@@ -61,16 +60,27 @@ class BaseRouter:
             raise HTTPException(status_code=404, detail="Item not found")
         return db_item
 
-    # TODO remove old routes
-    def add_new_route(self, path: str, method: str, endpoint, dependencies=None):
-        for route in self.router.routes:
-            print(route)
-            print("\n")
+    def add_new_route(  self,
+                        path: str,
+                        method: str,
+                        endpoint,
+                        response_model=None,
+                        get_privilege=None):
+
+        # remove existing path and method
+        for i, route in enumerate(self.router.routes):
+            if path == route.path and method in route.methods:
+                del self.router.routes[i]
+
+        dependencies = None
+        if get_privilege:
+            dependencies = [Depends(get_privilege)]
+
         new_route = APIRoute(
             path=path,
             endpoint=endpoint,
             methods=[method],
-            response_model=self.model,
+            response_model=response_model,
             dependencies=dependencies
         )
         self.router.routes.append(new_route)
@@ -82,15 +92,17 @@ class UserRouter(BaseRouter):
                             input_model=base_schemas.UserInput)
 
         self.init_routes(get_privilege=get_admin_rights)
-        
-        
-        # Create routes using APIRoute instead of decorators
-        self.add_new_route(path='/', method='POST', endpoint=self._create_user)
-        self.add_new_route(path='/token', method='PUT', endpoint=self._login)
-        
-        for route in self.router.routes:
-            print(route)
-            print("\n")
+
+        # example to add extra routes and set privileges
+        self.add_new_route( path='/',
+                            method='POST',
+                            endpoint=self._create_user,
+                            response_model=self.model,
+                            get_privilege=get_admin_rights)
+
+        self.add_new_route( path='/token',
+                            method='POST',
+                            endpoint=self._login)
 
     def _create_user(   self,
                         user: base_schemas.UserInput,
@@ -108,7 +120,7 @@ class UserRouter(BaseRouter):
         )
             new_user = self.orm.create(db=db, obj=updated_user)
             return new_user
-    
+
     # create new token for a user
     def _login(
         self,
@@ -121,7 +133,6 @@ class UserRouter(BaseRouter):
         encode_data =   {
                             "sub": user.username,
                             "priv": user.privilege
-
                         }
         access_token = create_access_token(data=encode_data)
         return {"access_token": access_token, "token_type": "bearer"}
