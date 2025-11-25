@@ -4,6 +4,7 @@ from sqlmodel import Session, select
 from .base_schemas import User
 from .schemas import Item
 
+
 class base_crud:
     def __init__(self, table):
         self.table = table
@@ -44,6 +45,7 @@ class base_crud:
             db.delete(db_obj)
             db.commit()
         return db_obj
+
 
 class user_orm(base_crud):
     def __init__(self):

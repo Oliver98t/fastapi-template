@@ -14,6 +14,7 @@ DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NA
 # SQLModel engine
 engine = create_engine(DATABASE_URL, echo=True)
 
+
 # Dependency to get DB session
 def get_db():
     with Session(engine) as session:
