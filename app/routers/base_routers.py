@@ -22,19 +22,23 @@ class BaseRouter:
     def init_routes(self, get_privilege):
         singular_item = self.model.__tablename__[:-1]
         self.singular_item_slug = "/{" + singular_item + "_id}"
+        
         self.router.get(
             "/", response_model=List[self.model], dependencies=[Depends(get_privilege)]
         )(self._get_all)
+
         self.router.get(
             self.singular_item_slug,
             response_model=self.model,
             dependencies=[Depends(get_privilege)],
         )(self._get)
+
         self.router.delete(
             self.singular_item_slug,
             response_model=self.model,
             dependencies=[Depends(get_privilege)],
         )(self._delete)
+
         # generate update routes for put/patch as input type cannot be determined at runtime
         update = self._make_update_func(input_model=self.input_model, orm=self.orm)
         self.router.put(
@@ -42,6 +46,7 @@ class BaseRouter:
             response_model=self.model,
             dependencies=[Depends(get_privilege)],
         )(update)
+
         patch = self._make_update_func(input_model=self.update_model, orm=self.orm)
         self.router.patch(
             self.singular_item_slug,
@@ -148,8 +153,6 @@ class UserRouter(BaseRouter):
         )
 
         self.add_new_route(path="/token", method="POST", endpoint=self._login)
-
-        print(self.router.routes)
 
     def _update_user(
         self,

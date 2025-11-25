@@ -6,6 +6,7 @@ from sqlmodel import SQLModel, Field
 from typing import Optional
 from datetime import datetime
 from enum import IntEnum
+from sqlalchemy import func
 
 # User
 #################################################
@@ -25,8 +26,7 @@ class User(SQLModel, table=True):
     privilege: int = Field(ge=0, le=2)  # TODO add number guard 0<=x<=2
     hashed_password: str
     created_at: datetime = Field(default_factory=datetime.now)
-    updated_at: Optional[datetime] = None
-
+    updated_at: Optional[datetime] = Field(default=None, sa_column_kwargs={"onupdate": func.now()})
 
 class UserInputUpdate(SQLModel):
     username: Optional[str] = None
