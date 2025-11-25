@@ -16,4 +16,9 @@ class ItemInput(SQLModel):
     name: str = Field(index=True)
     price: float
     is_active: bool
+
+class ItemUpdate(SQLModel):
+    name: Optional[str] = None
+    price: Optional[float] = None
+    is_active: Optional[bool] = None
 #################################################

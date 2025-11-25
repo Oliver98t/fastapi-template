@@ -24,6 +24,12 @@ class User(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: Optional[datetime] = None
 
+class UserInputUpdate(SQLModel):
+    username: Optional[str] = None
+    email: Optional[str] = None
+    privilege: Optional[int] = None
+    password: Optional[str] = None
+
 class UserInput(SQLModel):
     username: str
     email: str

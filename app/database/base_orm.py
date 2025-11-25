@@ -8,16 +8,16 @@ class base_crud:
     def __init__(self, table):
         self.table = table
 
-    def get(self, id: int, db: Session = Depends(get_db)):
+    def get(self, id: int, db: Session):
         print(id)
         return db.get(self.table, id)
 
-    def get_all(self, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    def get_all(self, skip: int = 0, limit: int = 100, db: Session = None):
         statement = select(self.table).offset(skip).limit(limit)
         results = db.exec(statement)
         return results.all()
 
-    def update(self, id: int, obj, db: Session = Depends(get_db)):
+    def update(self, id: int, obj, db: Session):
         db_obj = db.get(self.table, id)
         if not db_obj:
             return None
@@ -31,14 +31,14 @@ class base_crud:
         db.refresh(db_obj)
         return db_obj
 
-    def create(self, obj, db: Session = Depends(get_db)):
+    def create(self, obj, db: Session):
         db_obj = self.table(**obj.dict())
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
         return db_obj
 
-    def delete(self, id: int, db: Session = Depends(get_db)):
+    def delete(self, id: int, db: Session):
         db_obj = db.get(self.table, id)
         if db_obj:
             db.delete(db_obj)
@@ -49,12 +49,12 @@ class user_orm(base_crud):
     def __init__(self):
         super().__init__(User)
 
-    def get_email(self, email: str, db: Session = Depends(get_db)):
+    def get_email(self, email: str, db: Session):
         statement = select(self.table).where(self.table.email == email)
         result = db.exec(statement).first()
         return result
 
-    def get_username(self, username: str, db: Session = Depends(get_db)):
+    def get_username(self, username: str, db: Session):
         statement = select(self.table).where(self.table.username == username)
         result = db.exec(statement).first()
         return result
