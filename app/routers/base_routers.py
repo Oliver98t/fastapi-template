@@ -44,11 +44,11 @@ from auth.encrypt import verify_password, create_access_token, get_admin_rights
 class BaseRouter:
     """
     Base router class providing generic CRUD operations for database models.
-    
+
     This class creates standard REST API endpoints (GET, POST, PUT, PATCH, DELETE)
     for any given database model and ORM. It's designed to be inherited by
     model-specific router classes.
-    
+
     Attributes:
         orm: The ORM instance for database operations
         model: The SQLModel class for response serialization
@@ -57,11 +57,11 @@ class BaseRouter:
         router: FastAPI router instance
         singular_item_slug: URL path parameter for single item operations
     """
-    
+
     def __init__(self, orm: base_crud, model, input_model, update_model):
         """
         Initialize BaseRouter with model-specific configurations.
-        
+
         Args:
             orm (base_crud): ORM instance for database operations
             model: SQLModel class for response serialization
@@ -77,7 +77,7 @@ class BaseRouter:
     def init_routes(self, get_privilege):
         """
         Initialize all standard CRUD routes with authentication.
-        
+
         Creates the following endpoints:
         - GET / (list all items with pagination)
         - GET /{item_id} (get single item)
@@ -85,13 +85,13 @@ class BaseRouter:
         - PUT /{item_id} (full update)
         - PATCH /{item_id} (partial update)
         - DELETE /{item_id} (delete item)
-        
+
         Args:
             get_privilege: Authentication dependency function
         """
         singular_item = self.model.__tablename__[:-1]
         self.singular_item_slug = "/{" + singular_item + "_id}"
-        
+
         self.router.get(
             "/", response_model=List[self.model], dependencies=[Depends(get_privilege)]
         )(self._get_all)
@@ -132,12 +132,12 @@ class BaseRouter:
     def _get_all(self, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
         """
         Retrieve all items with pagination.
-        
+
         Args:
             skip (int, optional): Number of records to skip. Defaults to 0.
             limit (int, optional): Maximum records to return. Defaults to 100.
             db (Session): Database session dependency.
-            
+
         Returns:
             List of model instances.
         """
@@ -147,14 +147,14 @@ class BaseRouter:
     def _get(self, id: int, db: Session = Depends(get_db)):
         """
         Retrieve a single item by ID.
-        
+
         Args:
             id (int): Primary key identifier
             db (Session): Database session dependency
-            
+
         Returns:
             Model instance
-            
+
         Raises:
             HTTPException: 404 if item not found
         """
@@ -166,25 +166,25 @@ class BaseRouter:
     def _make_create_func(self, input_model, orm):
         """
         Generate a create function with proper type annotations.
-        
+
         This method is needed because FastAPI requires proper type annotations
         to generate correct API documentation and request validation.
-        
+
         Args:
             input_model: Input model class for request validation
             orm: ORM instance for database operations
-            
+
         Returns:
             Function: Create endpoint function with proper annotations
         """
         def create(item, db: Session = Depends(get_db)):
             """
             Create a new item.
-            
+
             Args:
                 item: Input model instance with item data
                 db (Session): Database session dependency
-                
+
             Returns:
                 Created model instance
             """
@@ -197,26 +197,26 @@ class BaseRouter:
     def _make_update_func(self, input_model, orm):
         """
         Generate an update function with proper type annotations.
-        
+
         This method is needed because FastAPI requires proper type annotations
         to generate correct API documentation and request validation.
-        
+
         Args:
             input_model: Input model class for request validation
             orm: ORM instance for database operations
-            
+
         Returns:
             Function: Update endpoint function with proper annotations
         """
         def update(id: int, item, db: Session = Depends(get_db)):
             """
             Update an existing item.
-            
+
             Args:
                 id (int): Primary key identifier
                 item: Input model instance with updated data
                 db (Session): Database session dependency
-                
+
             Returns:
                 Updated model instance
             """
@@ -229,14 +229,14 @@ class BaseRouter:
     def _delete(self, id: int, db: Session = Depends(get_db)):
         """
         Delete an item by ID.
-        
+
         Args:
             id (int): Primary key identifier
             db (Session): Database session dependency
-            
+
         Returns:
             Deleted model instance
-            
+
         Raises:
             HTTPException: 404 if item not found
         """
@@ -250,10 +250,10 @@ class BaseRouter:
     ):
         """
         Add or replace a custom route on the router.
-        
+
         This method allows extending the base router with custom endpoints
         or overriding default behavior for specific routes.
-        
+
         Args:
             path (str): URL path for the route
             method (str): HTTP method (GET, POST, PUT, PATCH, DELETE)
@@ -285,16 +285,16 @@ class BaseRouter:
 class UserRouter(BaseRouter):
     """
     User-specific router extending BaseRouter with authentication features.
-    
+
     Provides all standard CRUD operations for users plus additional endpoints
     for user authentication (login) and custom user management logic.
     All user operations require admin privileges except for login.
     """
-    
+
     def __init__(self):
         """
         Initialize UserRouter with user-specific configurations.
-        
+
         Sets up the router with user models and admin authentication requirements.
         Also adds custom routes for user creation, updates, and authentication.
         """
@@ -319,7 +319,7 @@ class UserRouter(BaseRouter):
         self.add_new_route(
             path=self.singular_item_slug,
             method="PUT",
-            endpoint=self._update_user,
+            endpoint=self._update_put_user,
             response_model=self.model,
             get_privilege=get_admin_rights,
         )
@@ -327,14 +327,52 @@ class UserRouter(BaseRouter):
         self.add_new_route(
             path=self.singular_item_slug,
             method="PATCH",
-            endpoint=self._update_user,
+            endpoint=self._update_patch_user,
             response_model=self.model,
             get_privilege=get_admin_rights,
         )
 
         self.add_new_route(path="/token", method="POST", endpoint=self._login)
 
-    def _update_user(
+    def _update_put_user(
+        self,
+        user_id: int,
+        user: base_schemas.UserInput,
+        db: Session = Depends(get_db),
+    ):
+        """
+        Update user with password hashing (full update).
+
+        All fields are required. Password is hashed before storage.
+
+        Args:
+            user_id (int): ID of user to update
+            user (UserInput): Complete user data with all required fields
+            db (Session): Database session dependency
+
+        Returns:
+            Updated User instance
+
+        Raises:
+            HTTPException: 404 if user doesn't exist
+        """
+
+        current_user = self.orm.get(id=user_id, db=db)
+        if not current_user:
+            raise HTTPException(status_code=404, detail="User doesn't exist")
+
+        # All fields are required, so directly create the update object
+        updated_user = base_schemas.UserInputHashed(
+            username=user.username,
+            email=user.email,
+            privilege=user.privilege,
+            hashed_password=get_password_hash(user.password),
+        )
+
+        new_user = self.orm.update(id=user_id, db=db, obj=updated_user)
+        return new_user
+
+    def _update_patch_user(
         self,
         user_id: int,
         user: base_schemas.UserInputUpdate,
@@ -342,18 +380,18 @@ class UserRouter(BaseRouter):
     ):
         """
         Update user with password hashing and field validation.
-        
+
         Handles partial updates while properly hashing passwords and
         preserving existing values for unchanged fields.
-        
+
         Args:
             user_id (int): ID of user to update
             user (UserInputUpdate): Updated user data (partial)
             db (Session): Database session dependency
-            
+
         Returns:
             Updated User instance
-            
+
         Raises:
             HTTPException: 404 if user doesn't exist
         """
@@ -387,14 +425,14 @@ class UserRouter(BaseRouter):
     def _create_user(self, user: base_schemas.UserInput, db: Session = Depends(get_db)):
         """
         Create a new user with password hashing and username validation.
-        
+
         Args:
             user (UserInput): User data with plain text password
             db (Session): Database session dependency
-            
+
         Returns:
             Created User instance
-            
+
         Raises:
             HTTPException: 404 (400) if username already exists
         """
@@ -419,17 +457,17 @@ class UserRouter(BaseRouter):
     ):
         """
         Authenticate user and generate access token.
-        
+
         Validates username and password, then creates a JWT access token
         containing user information and privileges.
-        
+
         Args:
             form_data (OAuth2PasswordRequestForm): Username and password
             db (Session): Database session dependency
-            
+
         Returns:
             dict: Access token and token type
-            
+
         Raises:
             HTTPException: 400 if credentials are invalid
         """
