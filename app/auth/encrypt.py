@@ -36,9 +36,10 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
 from database.base_schemas import UserPrivilege
+import os
 
 # Secret key and algorithm for JWT
-SECRET_KEY = "your-secret-key"
+SECRET_KEY = os.getenv("SECRET")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
