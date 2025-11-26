@@ -77,6 +77,8 @@ To stop the services:
 ```bash
 docker compose down
 ```
+## Copy over exmaple.env
+cp example.env .env
 
 ## Database Migrations
 

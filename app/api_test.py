@@ -24,7 +24,25 @@ SOFTWARE.
 
 Author: Oliver Tattersfield
 Date: November 25, 2024
-Purpose: Database package initialization.
-         This file makes the database directory a Python package containing
-         database models, schemas, and ORM utilities.
+Purpose: API test suite for FastAPI application.
+         Contains integration tests for API endpoints using pytest
+         and FastAPI test client.
 """
+
+import pytest
+from fastapi.testclient import TestClient
+from .main import app
+
+client = TestClient(app)
+
+
+def test_read_root():
+    """
+    Test the root endpoint health check.
+    
+    Verifies that the API root endpoint returns proper status
+    and expected response format.
+    """
+    response = client.get("/")
+    assert response.status_code == 200
+    assert response.json() == {"Server Status": "Running"}
